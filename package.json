@@ -4,13 +4,15 @@
   "description": "Agent to sync Shopify data to SQL Server",
   "main": "sync.js",
   "scripts": {
-    "start": "node sync.js"
+    "start": "node sync.js",
+    "api": "node api.js"
   },
   "dependencies": {
     "axios": "^0.21.1",
     "mssql": "^9.0.1",
     "dotenv": "^10.0.0",
     "commander": "^10.0.0",
-    "node-cron": "^3.0.0"
+    "node-cron": "^3.0.0",
+    "express": "^4.18.2"
   }
 }

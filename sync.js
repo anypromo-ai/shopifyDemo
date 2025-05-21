@@ -8,6 +8,7 @@ const program = new Command();
 program
   .option('--resource <type>', 'resource to sync: orders, products, customers')
   .option('--hours <number>', 'only sync orders updated within N hours', v => parseInt(v, 10))
+
   .parse(process.argv);
 
 const options = program.opts();
@@ -36,6 +37,7 @@ async function rateLimitedPost(body) {
   if (wait) await new Promise(r => setTimeout(r, wait));
   lastRequestTime = Date.now();
   return instance.post('', body);
+  
 }
 
 async function upsert(table, keyColumn, item) {
