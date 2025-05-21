@@ -8,8 +8,10 @@ This project provides `sync.js`, a Node.js script that synchronizes Shopify data
 2. Run a sync for a specific resource:
 
 ```bash
-node sync.js --resource=orders
+node sync.js --resource=orders --hours=24
 ```
+
+The `--hours` option limits order sync to the given time window (in hours).
 
 3. Without arguments, all resources (`orders`, `products`, `customers`) are synchronized. The script also schedules an hourly job using `node-cron`.
 
