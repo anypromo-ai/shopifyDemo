@@ -69,6 +69,7 @@ async function saveLog(message, resource) {
 async function fetchAll(resource, params = {}) {
   const search = new URLSearchParams(params).toString();
   let url = `${resource}.json?limit=250${search ? `&${search}` : ''}`;
+
   let items = [];
   while (url) {
     try {
@@ -82,6 +83,7 @@ async function fetchAll(resource, params = {}) {
         } else {
           url = null;
         }
+
       } else {
         url = null;
       }
@@ -121,6 +123,7 @@ async function syncOrders(hours) {
     }
   }
   await saveLog(`Orders synced: ${success}, Failed: ${failures.length}`, 'orders');
+
 }
 
 async function syncProducts() {
