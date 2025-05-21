@@ -1,0 +1,16 @@
+{
+  "name": "shopify-sql-sync-agent",
+  "version": "1.0.0",
+  "description": "Agent to sync Shopify data to SQL Server",
+  "main": "sync.js",
+  "scripts": {
+    "start": "node sync.js"
+  },
+  "dependencies": {
+    "axios": "^0.21.1",
+    "mssql": "^9.0.1",
+    "dotenv": "^10.0.0",
+    "commander": "^10.0.0",
+    "node-cron": "^3.0.0"
+  }
+}
