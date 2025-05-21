@@ -7,6 +7,7 @@ const cron = require('node-cron');
 const program = new Command();
 program
   .option('--resource <type>', 'resource to sync: orders, products, customers')
+  .option('--hours <number>', 'sync orders updated within the last <number> hours', parseInt)
   .parse(process.argv);
 
 const options = program.opts();
@@ -65,8 +66,10 @@ async function saveLog(message, resource) {
   });
 }
 
-async function fetchAll(resource) {
-  let url = `${resource}.json?limit=250`;
+async function fetchAll(resource, params = {}) {
+  const search = new URLSearchParams(params).toString();
+  let url = `${resource}.json?limit=250${search ? `&${search}` : ''}`;
+
   let items = [];
   while (url) {
     try {
@@ -75,7 +78,12 @@ async function fetchAll(resource) {
       const link = res.headers['link'];
       if (link && link.includes('rel="next"')) {
         const matched = link.match(/<([^>]+)>; rel="next"/);
-        url = matched ? matched[1] : null;
+        if (matched) {
+          url = matched[1].replace(`https://${CONFIG.storeDomain}/admin/api/${CONFIG.apiVersion}/`, '');
+        } else {
+          url = null;
+        }
+
       } else {
         url = null;
       }
@@ -87,8 +95,15 @@ async function fetchAll(resource) {
   return items;
 }
 
-async function syncOrders() {
-  const orders = await fetchAll('orders');
+async function syncOrders(hours) {
+  const params = {};
+  if (hours) {
+    params.status = 'any';
+    params.updated_at_min = new Date(Date.now() - hours * 3600 * 1000).toISOString();
+  }
+  const orders = await fetchAll('orders', params);
+  let success = 0;
+  let failures = [];
   for (const order of orders) {
     const item = {
       Id: order.id,
@@ -99,8 +114,16 @@ async function syncOrders() {
       TotalPrice: order.total_price,
       RawJSON: JSON.stringify(order),
     };
-    await upsert('dbo.ShopifyOrders', 'Id', item);
+    try {
+      await upsert('dbo.ShopifyOrders', 'Id', item);
+      success++;
+    } catch (err) {
+      failures.push(order.id);
+      await saveLog(`Order ${order.id} failed: ${err.message}`, 'orders');
+    }
   }
+  await saveLog(`Orders synced: ${success}, Failed: ${failures.length}`, 'orders');
+
 }
 
 async function syncProducts() {
@@ -135,7 +158,7 @@ async function run() {
   try {
     switch (options.resource) {
       case 'orders':
-        await syncOrders();
+        await syncOrders(options.hours);
         break;
       case 'products':
         await syncProducts();
@@ -144,7 +167,7 @@ async function run() {
         await syncCustomers();
         break;
       default:
-        await syncOrders();
+        await syncOrders(options.hours);
         await syncProducts();
         await syncCustomers();
         break;
